@@ -17,6 +17,7 @@ Also, create a file called '.env' in the root directory of the project. This nee
     DB_USER=[postgres username]
     DB_PASS=[password for database user]
     DB_NAME=[name of the database]
+    DB_PORT=[port of the database]
     
 NOTE: The Dockerfile is not needed if you aren't going to Dockerize this application.
 
