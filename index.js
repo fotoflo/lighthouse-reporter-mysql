@@ -236,15 +236,15 @@ async function parseReportAndStore (url, template, report) {
   // Raw Reports Query
   const raw_reports_query_text = "INSERT INTO raw_reports SET ? ";
 
-  let raw_reports_query_params = {
+  const raw_reports_query_params = {
     url,
     template,
     fetch_time,
     report: JSON.stringify(report)
   };
-  console.log("Querying Raw Reports")
-  console.log(raw_reports_query_text)
-  console.log(JSON.stringify(raw_reports_query_params))
+  // console.log("Querying Raw Reports")
+  // console.log(raw_reports_query_text)
+  // console.log(JSON.stringify(raw_reports_query_params))
 
   await db.query(raw_reports_query_text, raw_reports_query_params);
 
@@ -253,7 +253,7 @@ async function parseReportAndStore (url, template, report) {
 
   const gds_audit_query_text = `INSERT INTO gds_audits SET ?`;
 
-  let gds_audit_query_params = {
+  const gds_audit_query_params = {
       url,
       template,
       fetch_time,
@@ -264,13 +264,36 @@ async function parseReportAndStore (url, template, report) {
       first_meaningful_paint,
       first_cpu_idle
   };
-
-  console.log("querying GDS Audits")
-  console.log(gds_audit_query_text)
-  console.log(JSON.stringify(gds_audit_query_params))
+// 
+//   console.log("querying GDS Audits")
+//   console.log(gds_audit_query_text)
+//   console.log(JSON.stringify(gds_audit_query_params))
 
   await db.query(gds_audit_query_text, gds_audit_query_params);
 
+
+  // SCORES
+
+  const scores_query_text = "INSERT INTO scores SET ?";
+  const categories = report.categories
+
+  Object.keys(categories).forEach( async (item) => {
+    const scores_query_params = {
+        audit_url: url,
+        template,
+        fetch_time,
+        category: categories[item].id,
+        title: categories[item].title,
+        score: categories[item].score
+    };
+
+    // console.log("querying scores")
+    // console.log(scores_query_text)
+    // console.log(JSON.stringify(scores_query_params))
+
+    await db.query(scores_query_text, scores_query_params);
+
+  })
 
   // INSERT RESOURCES
 
@@ -286,7 +309,7 @@ async function parseReportAndStore (url, template, report) {
       resource_type = 'Other';
     }
 
-    console.log("resrouce url: ", resource['url'])
+    // console.log("resrouce url: ", resource['url'])
 
     const resource_chart_query_params = {
       audit_url: url,
@@ -297,11 +320,11 @@ async function parseReportAndStore (url, template, report) {
       start_time: resource['startTime'],
       end_time: resource['endTime']
     };
-
-    console.log("Resource Charts")
-    console.log(resource_chart_query_text)
-    console.log(JSON.stringify(resource_chart_query_params))
-
+// 
+//     console.log("Resource Charts")
+//     console.log(resource_chart_query_text)
+//     console.log(JSON.stringify(resource_chart_query_params))
+// 
     await db.query(resource_chart_query_text, resource_chart_query_params);
   }
 
@@ -318,10 +341,10 @@ async function parseReportAndStore (url, template, report) {
       audit_text: opportunity['audit_text'],
       estimated_savings: opportunity['estimated_savings']
     };
-
-    console.log("Savings opportunities")
-    console.log(savings_opportunities_query_text)
-    console.log(JSON.stringify(savings_opportunities_query_params))
+// 
+//     console.log("Savings opportunities")
+//     console.log(savings_opportunities_query_text)
+//     console.log(JSON.stringify(savings_opportunities_query_params))
 
     await db.query(savings_opportunities_query_text, savings_opportunities_query_params);
   }
@@ -345,9 +368,9 @@ async function parseReportAndStore (url, template, report) {
         item_value: item['value']
       };
 
-      console.log("Diagnostics")
-      console.log(diagnostics_query_text)
-      console.log(JSON.stringify(diagnostics_query_params))
+      // console.log("Diagnostics")
+      // console.log(diagnostics_query_text)
+      // console.log(JSON.stringify(diagnostics_query_params))
 
       await db.query(diagnostics_query_text, diagnostics_query_params);
     }
