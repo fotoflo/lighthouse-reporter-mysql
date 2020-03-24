@@ -284,7 +284,7 @@ async function parseReportAndStore (url, template, report) {
         fetch_time,
         category: categories[item].id,
         title: categories[item].title,
-        score: categories[item].score
+        score: categories[item].score * 100
     };
 
     // console.log("querying scores")

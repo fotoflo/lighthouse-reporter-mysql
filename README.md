@@ -11,15 +11,18 @@ Clone the repository. Install the dependencies as usual:
 
 Create a folder called 'input' in the root directory of the project. This folder will contain the CSV of URLs to generate reports.
 
-Also, create a file called '.env' in the root directory of the project. This needs to contain four environment variables for your database connection, like so (don't include the square brackets):
+Also, create a file called '.env' in the root directory of the project. This needs to contain the login info for your database
 
-    DB_HOST=[address of your CloudSQL database]
-    DB_USER=[postgres username]
-    DB_PASS=[password for database user]
-    DB_NAME=[name of the database]
-    DB_PORT=[port of the database]
+    export DB_HOST=[address of your CloudSQL database]
+    export DB_USER=[postgres username]
+    export DB_PASS=[password for database user]
+    export DB_NAME=[name of the database]
+    export DB_PORT=[port of the database]
+
+    then run `source .env` to add those environment variables to your environment - you can run `printenv` to validate they are now part of the runtime environment 
     
-NOTE: The Dockerfile is not needed if you aren't going to Dockerize this application.
+
+NOTE: The Dockerfile is not needed if you aren't going to Dockerize this application. If you are going to dockerize the application you should remove export from the .env and done need to run `source .env`
 
 ## Usage
 
@@ -39,6 +42,8 @@ The tool will generate lighthouse reports and store them in the database.
 
 ### Automatic Reporting
 
+ - Note this is untested in this fork
+
 The tool can run reports automatically for a specified duration of time. To do that, simply setup a crontab that executes the tool every day with an empty 'input' folder. This will run the tool in maintainence mode, and it will automatically report on URLs stored in the database.
 
 To setup an automated report, place a CSV of URLs in the input folder just like usual. Add the following parameters to the command:
@@ -49,18 +54,9 @@ The numbers can be replaced with whatever values you'd like. This example will a
 
 ## Creating A New Report
 
-### Creating the database views
-
-First, log in to the Cloud SQL database (or whatever PostgresSQL database you're using). Run the following queries to create four new views for the new property (replace 'target' with the your own client's name):
-
-    CREATE VIEW target_gds_audits AS SELECT * FROM gds_audits WHERE url LIKE '%target.com%';
-    CREATE VIEW target_savings_opportunities AS SELECT * FROM savings_opportunities WHERE audit_url LIKE '%target.com%';
-    CREATE VIEW target_diagnostics AS SELECT * FROM diagnostics WHERE audit_url LIKE '%target.com%';
-    CREATE VIEW target_resource_chart AS SELECT * FROM resource_chart WHERE audit_url LIKE '%target.com%';
-
 ### Creating the data sources
 
-Now, go into GDS and create four new data sources. Select 'PostgreSQL' as the source type and input the credentials for the Cloud SQL database. Choose one of the four views you created in the previous step, so that there is a data source for each of the four views.
+Now, go into GDS and create new data sources for each table. Select 'MySQL' as the source type and input the credentials for the Cloud SQL database. Then select the tables one by one.
 
 ### Whitelisting The Database
 
@@ -156,3 +152,15 @@ This table contains some useful page statistics.
 4. diagnostic_id - VARCHAR(2048) - The ID of the audit in question
 5. item_label - VARCHAR(2048) - The label for the specific item in that audit
 6. item_value - DECIMAL - The numeric value for the item in question
+
+### scores
+
+This table contains the scores for SEO, Progressive Web App, Accessability, Performance and Best Practices
+
+0. id - SERIAL PRIMARY KEY - For unique identification
+1. audit_url - VARCHAR(2048) - The URL of the page where this request originated
+2. template - VARCHAR(2048) - The template to which this page belongs
+3. fetch_time - TIMESTAMP - The fetch_time of the report where this request originated
+4. Category - VARCHAR(2048) - the type of score
+5. Title - VARCHAR(2048) - Score in plain text
+6. Score - INT - The numeric value of the score
