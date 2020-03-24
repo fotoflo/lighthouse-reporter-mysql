@@ -11,8 +11,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "colors": "^1.4.0",
     "dotenv": "8.2.0",
     "lighthouse": "5.6.0",
+    "mysql": "^2.18.1",
     "neat-csv": "5.1.0",
     "pg": "7.17.1"
   }

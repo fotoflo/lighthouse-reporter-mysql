@@ -87,7 +87,7 @@ async function doReporting (urls_and_templates) {
     const template = urls_and_templates[i]['Template'];
 
     // Logging
-    console.log(urls_and_templates[i]);
+    console.log("auditing for ", urls_and_templates[i]);
 
     // Perform the audit (catch error if needed)
     try {
@@ -98,6 +98,7 @@ async function doReporting (urls_and_templates) {
         console.error(report['runtimeError']['message']);
       }else{
         // Generate insert the report into the database tables
+        console.log("storing ", template);
         await parseReportAndStore(url, template, report);
       }
     } catch (e) {
@@ -232,91 +233,71 @@ async function parseReportAndStore (url, template, report) {
   // Perform some conversions
   page_size = page_size / 1024; // <-- Convert KB to MB
 
-  // Prepare the queries
-  const raw_reports_query_text = `INSERT INTO raw_reports (
-                                              url,
-                                              template,
-                                              fetch_time,
-                                              report
-                                            )
-                                            VALUES (
-                                              $1, $2, $3, $4
-                                            )`;
+  // Raw Reports Query
+  const raw_reports_query_text = "INSERT INTO raw_reports SET ? ";
 
-  const gds_audit_query_text = `INSERT INTO gds_audits (
-                                              url,
-                                              template,
-                                              fetch_time,
-                                              page_size,
-                                              first_contentful_paint,
-                                              max_potential_fid,
-                                              time_to_interactive,
-                                              first_meaningful_paint,
-                                              first_cpu_idle
-                                            )
-                                            VALUES (
-                                              $1, $2, $3, $4, $5, $6, $7, $8, $9
-                                            )`;
-
-  const resource_chart_query_text = `INSERT INTO resource_chart (
-                                                  audit_url,
-                                                  template,
-                                                  fetch_time,
-                                                  resource_url,
-                                                  resource_type,
-                                                  start_time,
-                                                  end_time
-                                                 )
-                                                 VALUES (
-                                                   $1, $2, $3, $4, $5, $6, $7
-                                                 )`;
-
-  const savings_opportunities_query_text = `INSERT INTO savings_opportunities(
-                                                          audit_url,
-                                                          template,
-                                                          fetch_time,
-                                                          audit_text,
-                                                          estimated_savings
-                                                        )
-                                                        VALUES (
-                                                          $1, $2, $3, $4, $5
-                                                        )`;
-
-  const diagnostics_query_text = `INSERT INTO diagnostics(
-                                                          audit_url,
-                                                          template,
-                                                          fetch_time,
-                                                          diagnostic_id,
-                                                          item_label,
-                                                          item_value
-                                                        )
-                                                        VALUES (
-                                                          $1, $2, $3, $4, $5, $6
-                                                        )`;
-
-  // Prepare the params for the queries
-  let raw_reports_query_params = [
+  const raw_reports_query_params = {
     url,
     template,
     fetch_time,
-    report
-  ];
+    report: JSON.stringify(report)
+  };
+  // console.log("Querying Raw Reports")
+  // console.log(raw_reports_query_text)
+  // console.log(JSON.stringify(raw_reports_query_params))
 
-  let gds_audit_query_params = [
-    url,
-    template,
-    fetch_time,
-    page_size,
-    first_contentful_paint,
-    max_potential_fid,
-    time_to_interactive,
-    first_meaningful_paint,
-    first_cpu_idle
-  ];
-
-  // Execute the queries
   await db.query(raw_reports_query_text, raw_reports_query_params);
+
+
+  // GDS AUDITS QUERY
+
+  const gds_audit_query_text = `INSERT INTO gds_audits SET ?`;
+
+  const gds_audit_query_params = {
+      url,
+      template,
+      fetch_time,
+      page_size,
+      first_contentful_paint,
+      max_potential_fid,
+      time_to_interactive,
+      first_meaningful_paint,
+      first_cpu_idle
+  };
+// 
+//   console.log("querying GDS Audits")
+//   console.log(gds_audit_query_text)
+//   console.log(JSON.stringify(gds_audit_query_params))
+
   await db.query(gds_audit_query_text, gds_audit_query_params);
+
+
+  // SCORES
+
+  const scores_query_text = "INSERT INTO scores SET ?";
+  const categories = report.categories
+
+  Object.keys(categories).forEach( async (item) => {
+    const scores_query_params = {
+        audit_url: url,
+        template,
+        fetch_time,
+        category: categories[item].id,
+        title: categories[item].title,
+        score: categories[item].score
+    };
+
+    // console.log("querying scores")
+    // console.log(scores_query_text)
+    // console.log(JSON.stringify(scores_query_params))
+
+    await db.query(scores_query_text, scores_query_params);
+
+  })
+
+  // INSERT RESOURCES
+
+  const resource_chart_query_text = `INSERT INTO resource_chart SET ?`;
 
   // Insert all resources from the resource table into the resource chart table
   for (let i = 0; i < network_resources.length; i++) {
@@ -328,52 +309,75 @@ async function parseReportAndStore (url, template, report) {
       resource_type = 'Other';
     }
 
-    const resource_chart_query_params = [
-      url,
+    // console.log("resrouce url: ", resource['url'])
+
+    const resource_chart_query_params = {
+      audit_url: url,
       template,
       fetch_time,
-      resource['url'],
+      resource_url: resource['url'],
       resource_type,
-      resource['startTime'],
-      resource['endTime']
-    ];
+      start_time: resource['startTime'],
+      end_time: resource['endTime']
+    };
+// 
+//     console.log("Resource Charts")
+//     console.log(resource_chart_query_text)
+//     console.log(JSON.stringify(resource_chart_query_params))
+// 
     await db.query(resource_chart_query_text, resource_chart_query_params);
   }
 
-  // Insert each savings opportunity into the correct table
+// Insert each savings opportunity into the correct table
+  const savings_opportunities_query_text = `INSERT INTO savings_opportunities SET ?`;
+
   for (let i = 0; i < savings_opportunities.length; i++) {
     const opportunity = savings_opportunities[i];
 
-    const savings_opportunities_query_params = [
-      url,
+    const savings_opportunities_query_params = {
+      audit_url: url,
       template,
       fetch_time,
-      opportunity['audit_text'],
-      opportunity['estimated_savings']
-    ];
+      audit_text: opportunity['audit_text'],
+      estimated_savings: opportunity['estimated_savings']
+    };
+// 
+//     console.log("Savings opportunities")
+//     console.log(savings_opportunities_query_text)
+//     console.log(JSON.stringify(savings_opportunities_query_params))
+
     await db.query(savings_opportunities_query_text, savings_opportunities_query_params);
   }
 
-  // Insert each diagnostic audit into the correct table
+
+// Insert each diagnostic audit into the correct table
+  const diagnostics_query_text = `INSERT INTO diagnostics SET ?`;
+
   for (let i = 0; i < diagnostics.length; i++) {
     const diag = diagnostics[i];
 
     for (let j = 0; j < diag['items'].length; j++) {
       const item = diag['items'][j];
 
-      const diagnostics_query_params = [
-        url,
+      const diagnostics_query_params = {
+        audit_url: url,
         template,
         fetch_time,
-        diag['diagnostic_id'],
-        item['label'],
-        item['value']
-      ];
+        diagnostic_id: diag['diagnostic_id'],
+        item_label: item['label'],
+        item_value: item['value']
+      };
+
+      // console.log("Diagnostics")
+      // console.log(diagnostics_query_text)
+      // console.log(JSON.stringify(diagnostics_query_params))
 
       await db.query(diagnostics_query_text, diagnostics_query_params);
     }
   }
 }
+
+
 
 // Process a file
 async function processFile (file_path) {
@@ -389,7 +393,7 @@ async function processFile (file_path) {
       db.disconnect();
       process.exit(-1);
     }else{
-      console.log('All good!');
+      console.log('CSV read successful!');
     }
 
     // Do reporting on the file
@@ -415,8 +419,8 @@ async function processFile (file_path) {
     console.log('$$$Something went wrong trying to read that file.');
     console.error(err);
   }
-}
-
+} 
+/* 
 async function doAutomaticReporting () {
   console.log('No file provided, doing automatic reporting...');
 
@@ -446,7 +450,7 @@ async function doAutomaticReporting () {
   db.disconnect();
   return;
 }
-
+ */
 // Let's get started
 // Connect to the database
 db.connect(() => {
@@ -457,7 +461,8 @@ db.connect(() => {
     console.log('We got a file! Process it...');
     processFile(path.join(__dirname, 'input', input_files[0]));
   }else{
-    doAutomaticReporting();
+//    doAutomaticReporting();
+    console.log("automatic reporting has been disabled... edit index.js to enable")
   }
 
   // If there is, this is an initial report
@@ -467,3 +472,13 @@ db.connect(() => {
   // If this is an AUTOMATIC run, we are done
   // Otherwise, save the list of URLs in the database (if not exists)
 });
+
+
+// make errors more readable
+const colors = require('colors');
+Error.prepareStackTrace = (err, arr) => {
+   let lines = err.stack.split('\n');
+   lines = lines.map(x => x.includes('node_modules') ? colors.grey(x) : x);
+   lines = lines.join('\n');
+   err.stack = lines;
+};
