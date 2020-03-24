@@ -108,7 +108,7 @@ function connect (callback) {
                     fetch_time TIMESTAMP,
                     category VARCHAR(2048),
                     title VARCHAR(2048),
-                    score FLOAT
+                    score INT
                   )
   `);
 
