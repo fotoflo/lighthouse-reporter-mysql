@@ -78,6 +78,19 @@ It will ask you to select data sources to replace the ones in the original repor
 
 The new report should populate with data from the views you previously created.
 
+## Creating a Partitioned Data Source (for running multiple partitioned reports from the same server)
+If we want to create data sources who's data is partitioned and cannot see the whole database, but can only see data from a specific page's report, we can create a MySQL data source on top of a query, instead of a table.
+
+Example: If in /input/input-live.csv we have:
+```
+URL,Template
+https://url1.com,TemplateName1
+https://url2.com,TemplateName2
+```
+
+Then in GDS we would use the following query to select only those templates for the gds_audits data souce:
+`select * from gds_audits where template in ('TemplateName1', 'TemplateName2');`
+
 ## Database Structure
 
 These are the tables used by the tool. In general, rows will be queried by the URL of the audit, and the time the report was fetched (fetch_time).
