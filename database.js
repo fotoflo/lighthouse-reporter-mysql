@@ -9,7 +9,13 @@ const settings = {
     port: process.env.DB_PORT
   }
 
-console.log(settings)
+
+if(!settings.database){
+  console.log("\nNo Database credentials in Envirnment, please edit .env and run source .env")
+  process.exit();
+}
+
+console.log(`logging into database ${settings.database} at ${settings.host}\n`)
 
 const client = mysql.createConnection(settings);  
 
