@@ -1,6 +1,6 @@
 // dependencies
 const mysql = require('mysql');
-const createTables = require('./util').createTables;
+const createTables = require('./createTables')
 
 const settings = {
     user: process.env.DB_USER,
