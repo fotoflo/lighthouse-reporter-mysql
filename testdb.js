@@ -4,10 +4,11 @@ const fs = require('fs');
 const url = "http://google.com"
 const template = "google"
 
-let rawdata = fs.readFileSync('sample-report.json');
+let rawdata = fs.readFileSync('./sample-report.json');
 let report = JSON.parse(rawdata);
 
 const fetch_time = report['fetchTime'];
+console.log("fetch_time", typeof(fetch_time), fetch_time)
 
 const test = async () => {
 	 await db.query('drop table scores');
@@ -18,6 +19,7 @@ const test = async () => {
                     audit_url VARCHAR(2048),
                     template VARCHAR(2048),
                     fetch_time TIMESTAMP,
+                    fetch_date DATE,
                     category VARCHAR(2048),
                     title VARCHAR(2048),
                     score FLOAT
@@ -44,6 +46,7 @@ const test = async () => {
 
 	    await db.query(scores_query_text, scores_query_params);
 
+	    process.exit();
 	  })
 }
 
