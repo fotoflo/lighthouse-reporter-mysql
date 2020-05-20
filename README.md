@@ -52,6 +52,12 @@ To setup an automated report, place a CSV of URLs in the input folder just like 
     
 The numbers can be replaced with whatever values you'd like. This example will automatically generate reports for the specified CSV of URLs every 30 days for the next 90 days.
 
+### test 
+The test folder allows automation testing of some functions but is not complete
+
+### backfill
+The backfill.js file copies the database from the old, pre-fork database, to the new db.  Unfortuatelly it isnt fully working and we decided to move on with this project.
+
 ## Creating A New Report
 
 ### Creating the data sources
