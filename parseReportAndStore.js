@@ -220,7 +220,7 @@ exports.parseReportAndStore = async function (url, template, report) {
       resource_type,
       start_time: resource['startTime'],
       end_time: resource['endTime'],
-      load_time: resource['endTime'] - resource['startTime']
+      load_time: (resource['endTime'] - resource['startTime']) || 0
     };
 //
     try{
@@ -232,7 +232,7 @@ exports.parseReportAndStore = async function (url, template, report) {
       console.log(err)
       debugger;
     } finally {
-      console.log("finally, resoruces")
+      //console.log("finally, resoruces")
     }
   }
 
