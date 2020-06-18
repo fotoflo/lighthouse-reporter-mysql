@@ -68,6 +68,9 @@ async function query (query_text, query_params) {
     // console.log(`query ${query_text} returned ${result}`)
     return result;
   }catch (err) {
+    console.log("********* CAUGHT ERROR *********")
+    console.log("query_text", query_text)
+    console.log("\nquery_params", query_params)
     console.error(err);
   }
 }

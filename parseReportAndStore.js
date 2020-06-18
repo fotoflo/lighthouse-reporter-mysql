@@ -222,15 +222,17 @@ exports.parseReportAndStore = async function (url, template, report) {
       end_time: resource['endTime'],
       load_time: resource['endTime'] - resource['startTime']
     };
-// 
-     console.log("Resource Charts")
-     console.log(resource_chart_query_text)
-     console.log(JSON.stringify(resource_chart_query_params))
+//
     try{
       await db.query(resource_chart_query_text, resource_chart_query_params);
     }catch(err){
+      console.log("********* CAUGHT DB - RESOURCE ERROR *********")
+      console.log("query_text", resource_chart_query_text)
+      console.log("\nquery_params", resource_chart_query_params)
       console.log(err)
       debugger;
+    } finally {
+      console.log("finally, resoruces")
     }
   }
 
