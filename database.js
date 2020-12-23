@@ -1,14 +1,22 @@
 // dependencies
 const mysql = require('mysql');
 const createTables = require('./createTables')
+const chalk = require('chalk')
+
 
 const settings = {
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASS,
-    port: process.env.DB_PORT
-  }
+  'user'                  : process.env.DB_USER,
+  'host'                  : process.env.DB_HOST,
+  'database'              : process.env.DB_NAME,
+  'password'              : process.env.DB_PASS,
+  'socketPath'            : process.env.DB_SOCKET_PATH,
+  'port'                  : process.env.DB_PORT,
+  'waitForConnections'    : true,
+  'connectionLimit'       : 10,
+  'queueLimit'            : 1000
+}
+
+printDBsettings(settings)
 
 
 if(!settings.database){
@@ -73,6 +81,31 @@ async function query (query_text, query_params) {
     console.log("\nquery_params", query_params)
     console.error(err);
   }
+}
+
+function printDBsettings(settings){
+  let s = Object.assign({}, settings)
+  try{
+      s.password = "*".repeat(s.password.length)
+  }catch(err){
+      console.error(chalk.bgRed(`
+      ***************                         
+      Cannot start database, be sure to run   
+      $ source .env                           
+      ***************                         `
+      ))
+      return false
+  }
+
+  console.info(chalk.yellow(`
+  ***************
+  ${chalk.inverse.red("ENV:" + process.env.ENV)}
+
+  Starting database with settings 
+${JSON.stringify(s, null, 2)}
+
+  ***************`))
+  return true
 }
 
 module.exports = {
