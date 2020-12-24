@@ -1,7 +1,7 @@
 // dependencies
 const mysql = require('mysql');
 const createTables = require('./createTables')
-const chalk = require('chalk')
+const {printDBsettings} = require('printdbsettings')
 
 
 const settings = {
@@ -9,7 +9,7 @@ const settings = {
   'host'                  : process.env.DB_HOST,
   'database'              : process.env.DB_NAME,
   'password'              : process.env.DB_PASS,
-  'socketPath'            : process.env.DB_SOCKET_PATH,
+  'socketPath'            : process.env.DB_SOCKET_PATH || "",
   'port'                  : process.env.DB_PORT,
   'waitForConnections'    : true,
   'connectionLimit'       : 10,
@@ -24,8 +24,6 @@ if(!settings.database){
   process.exit();
 }
 
-console.log(`logging into database ${settings.database} at ${settings.host}\n`)
-
 const client = mysql.createConnection(settings);  
 
 
@@ -33,7 +31,7 @@ function connect (callback) {
   client.connect(function(err) {
   if (err) {
     console.log(settings)
-    console.error('error connecting: ' + err.stack);
+    console.error('error connecting to db: ' + err.stack);
     return;
   }
 
@@ -81,31 +79,6 @@ async function query (query_text, query_params) {
     console.log("\nquery_params", query_params)
     console.error(err);
   }
-}
-
-function printDBsettings(settings){
-  let s = Object.assign({}, settings)
-  try{
-      s.password = "*".repeat(s.password.length)
-  }catch(err){
-      console.error(chalk.bgRed(`
-      ***************                         
-      Cannot start database, be sure to run   
-      $ source .env                           
-      ***************                         `
-      ))
-      return false
-  }
-
-  console.info(chalk.yellow(`
-  ***************
-  ${chalk.inverse.red("ENV:" + process.env.ENV)}
-
-  Starting database with settings 
-${JSON.stringify(s, null, 2)}
-
-  ***************`))
-  return true
 }
 
 module.exports = {
