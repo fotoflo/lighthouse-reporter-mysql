@@ -1,7 +1,7 @@
 // dependencies
 const mysql = require('mysql');
 const createTables = require('./createTables')
-const {printDBsettings} = require('printdbsettings')
+const {printDBsettings} = require('commonutils')
 
 
 const settings = {
