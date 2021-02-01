@@ -31,7 +31,7 @@ function connect (callback) {
   client.connect(function(err) {
   if (err) {
     console.log(settings)
-    console.error('error connecting to db: ' + err.stack);
+    console.error('error connecting to db: ', err);
     return;
   }
 
